@@ -25,11 +25,11 @@ jobs:
         echo "Submodule URL: $SUBMODULE_URL"
         if [ -n "$SUBMODULE_PATH" ] && [ -n "$SUBMODULE_URL" ]; then
           echo "Cloning $SUBMODULE_URL into $SUBMODULE_PATH"
-          git clone --depth 1 $SUBMODULE_URL $SUBMODULE_PATH
+          git clone --depth 1 "$SUBMODULE_URL" "$SUBMODULE_PATH"
           
-          echo "--- Patching $SUBMODULE_PATH/build.gradle (รอบแรก: добавление namespace и buildFeatures.buildConfig) ---"
+          echo "--- Patching $SUBMODULE_PATH/build.gradle (adding namespace and buildFeatures.buildConfig) ---"
           awk '
-          /id \'com.android.library\'/ {
+          /id '\''com.android.library'\''/ {
             print
             print "}\n\nandroid {"
             print "    namespace \"virtual.camera.opensdk\""
@@ -48,24 +48,23 @@ jobs:
           }
           /buildFeatures \{/ {
             print
-            print "        buildConfig true" # Добавляем, если buildFeatures уже существует
-            # Пропускаем закрывающую скобку buildFeatures, если она есть, чтобы не дублировать
+            print "        buildConfig true"
             while (getline > 0 && $0 !~ /^\s*\}/) { print }
-            if ($0 ~ /^\s*\}/) { print } else { print "    }" } # Закрываем, если не было
+            if ($0 ~ /^\s*\}/) { print } else { print "    }" } 
             next
           }
           {print}
-          ' $SUBMODULE_PATH/build.gradle > $SUBMODULE_PATH/build.gradle.tmp && mv $SUBMODULE_PATH/build.gradle.tmp $SUBMODULE_PATH/build.gradle
+          ' "$SUBMODULE_PATH/build.gradle" > "$SUBMODULE_PATH/build.gradle.tmp" && mv "$SUBMODULE_PATH/build.gradle.tmp" "$SUBMODULE_PATH/build.gradle"
           
           echo "Patched $SUBMODULE_PATH/build.gradle:"
-          cat $SUBMODULE_PATH/build.gradle
+          cat "$SUBMODULE_PATH/build.gradle"
         else
           echo "Could not parse submodule path or URL from .gitmodules"
           exit 1
         fi
         echo ""
         echo "--- Listing $SUBMODULE_PATH directory ---"
-        ls -la $SUBMODULE_PATH || echo "$SUBMODULE_PATH directory not found or empty"
+        ls -la "$SUBMODULE_PATH" || echo "$SUBMODULE_PATH directory not found or empty"
 
     - name: Set up JDK 17
       uses: actions/setup-java@v3
