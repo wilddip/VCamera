@@ -73,7 +73,7 @@ repositories {
     mavenCentral()
     google()
     maven { url 'https://jitpack.io' }
-    maven { url "https://raw.githubusercontent.com/andvipgroup/CameraLib/master" }
+    // maven { url "https://raw.githubusercontent.com/andvipgroup/CameraLib/master" } // Временно комментируем
     flatDir {
         dirs 'libs'
     }
@@ -108,5 +108,5 @@ dependencies {
     implementation 'com.imuxuan:floatingview:1.6'
 
     implementation project(':opensdk')
-    implementation 'virtual.camera.camera:camera:1.0.0'
+    // implementation 'virtual.camera.camera:camera:1.0.0' // Временно комментируем
 }
