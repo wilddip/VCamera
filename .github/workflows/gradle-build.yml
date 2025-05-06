@@ -11,30 +11,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout main repository and submodules
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+        # token: ${{ secrets.YOUR_PAT_IF_NEEDED }} # Раскомментируйте, если подмодуль приватный
     
-    - name: Debug Submodules & Initialize
+    - name: Verify submodule content
       run: |
         echo "--- Verifying .gitmodules ---"
         cat .gitmodules || echo ".gitmodules not found"
         echo ""
-        echo "--- Initial git submodule status ---"
+        echo "--- Git submodule status ---"
         git submodule status || echo "Failed to get submodule status"
         echo ""
-        echo "--- Initializing submodules (git submodule init) ---"
-        git submodule init
-        echo ""
-        echo "--- Git submodule status after init ---"
-        git submodule status || echo "Failed to get submodule status after init"
-        echo ""
-        echo "--- Updating submodules (git submodule update --init --recursive --force) ---"
-        git submodule update --init --recursive --force
-        echo ""
-        echo "--- Final git submodule status ---"
-        git submodule status || echo "Failed to get submodule status after update"
-        echo ""
         echo "--- Listing opensdk directory ---"
-        ls -la opensdk || echo "opensdk directory not found after all attempts"
+        ls -la opensdk || echo "opensdk directory not found after checkout"
         echo ""
         echo "--- Attempting to display opensdk/build.gradle ---"
         cat opensdk/build.gradle || echo "opensdk/build.gradle not found"
