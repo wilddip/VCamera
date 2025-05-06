@@ -66,6 +66,11 @@ jobs:
         echo "--- Listing $SUBMODULE_PATH directory ---"
         ls -la "$SUBMODULE_PATH" || echo "$SUBMODULE_PATH directory not found or empty"
 
+    - name: Verify app/build.gradle content before Gradle execution
+      run: |
+        echo "--- Displaying app/build.gradle content ---"
+        cat app/build.gradle
+
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
