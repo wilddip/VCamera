@@ -15,7 +15,7 @@ jobs:
       uses: actions/checkout@v4
       # fetch-depth: 0 # Пока не нужно, если клонируем вручную
 
-    - name: Manually Clone Submodule
+    - name: Manually Clone and Patch Submodule
       run: |
         echo "--- Verifying .gitmodules content ---"
         cat .gitmodules || echo ".gitmodules not found or unreadable"
@@ -24,14 +24,18 @@ jobs:
         echo "Submodule Path: $SUBMODULE_PATH"
         echo "Submodule URL: $SUBMODULE_URL"
         if [ -n "$SUBMODULE_PATH" ] && [ -n "$SUBMODULE_URL" ]; then
-          echo "Creating directory $SUBMODULE_PATH if it doesn't exist"
-          mkdir -p $SUBMODULE_PATH
           echo "Cloning $SUBMODULE_URL into $SUBMODULE_PATH"
           git clone --depth 1 $SUBMODULE_URL $SUBMODULE_PATH
-          # Если нужно перейти на конкретный коммит, это нужно будет добавить сюда
-          # cd $SUBMODULE_PATH
-          # git checkout <commit_hash>
-          # cd ..
+          
+          echo "--- Patching $SUBMODULE_PATH/build.gradle ---"
+          # Добавляем namespace. Используем awk для вставки после строки, содержащей 'com.android.library'
+          awk '
+          /id \'com.android.library\'/{print; print "}\n\nandroid {"; print "    namespace \"virtual.camera.opensdk\""; next}
+          /android \{/{print; print "    namespace \"virtual.camera.opensdk\""; next} # Если блока plugins нет, но есть android
+          {print}
+          ' $SUBMODULE_PATH/build.gradle > $SUBMODULE_PATH/build.gradle.tmp && mv $SUBMODULE_PATH/build.gradle.tmp $SUBMODULE_PATH/build.gradle
+          echo "Patched $SUBMODULE_PATH/build.gradle:"
+          cat $SUBMODULE_PATH/build.gradle
         else
           echo "Could not parse submodule path or URL from .gitmodules"
           exit 1
@@ -39,9 +43,6 @@ jobs:
         echo ""
         echo "--- Listing $SUBMODULE_PATH directory ---"
         ls -la $SUBMODULE_PATH || echo "$SUBMODULE_PATH directory not found or empty"
-        echo ""
-        echo "--- Attempting to display $SUBMODULE_PATH/build.gradle ---"
-        cat $SUBMODULE_PATH/build.gradle || echo "$SUBMODULE_PATH/build.gradle not found"
 
     - name: Set up JDK 17
       uses: actions/setup-java@v3
