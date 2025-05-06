@@ -27,13 +27,36 @@ jobs:
           echo "Cloning $SUBMODULE_URL into $SUBMODULE_PATH"
           git clone --depth 1 $SUBMODULE_URL $SUBMODULE_PATH
           
-          echo "--- Patching $SUBMODULE_PATH/build.gradle ---"
-          # Добавляем namespace. Используем awk для вставки после строки, содержащей 'com.android.library'
+          echo "--- Patching $SUBMODULE_PATH/build.gradle (รอบแรก: добавление namespace и buildFeatures.buildConfig) ---"
           awk '
-          /id \'com.android.library\'/{print; print "}\n\nandroid {"; print "    namespace \"virtual.camera.opensdk\""; next}
-          /android \{/{print; print "    namespace \"virtual.camera.opensdk\""; next} # Если блока plugins нет, но есть android
+          /id \'com.android.library\'/ {
+            print
+            print "}\n\nandroid {"
+            print "    namespace \"virtual.camera.opensdk\""
+            print "    buildFeatures {"
+            print "        buildConfig true"
+            print "    }"
+            next
+          }
+          /android \{/ {
+            print
+            print "    namespace \"virtual.camera.opensdk\""
+            print "    buildFeatures {"
+            print "        buildConfig true"
+            print "    }"
+            next
+          }
+          /buildFeatures \{/ {
+            print
+            print "        buildConfig true" # Добавляем, если buildFeatures уже существует
+            # Пропускаем закрывающую скобку buildFeatures, если она есть, чтобы не дублировать
+            while (getline > 0 && $0 !~ /^\s*\}/) { print }
+            if ($0 ~ /^\s*\}/) { print } else { print "    }" } # Закрываем, если не было
+            next
+          }
           {print}
           ' $SUBMODULE_PATH/build.gradle > $SUBMODULE_PATH/build.gradle.tmp && mv $SUBMODULE_PATH/build.gradle.tmp $SUBMODULE_PATH/build.gradle
+          
           echo "Patched $SUBMODULE_PATH/build.gradle:"
           cat $SUBMODULE_PATH/build.gradle
         else
