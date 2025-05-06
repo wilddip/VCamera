@@ -11,25 +11,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout main repository and submodules
+    - name: Checkout main repository
       uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
-        # token: ${{ secrets.YOUR_PAT_IF_NEEDED }} # Раскомментируйте, если подмодуль приватный
-    
-    - name: Verify submodule content
+      #  submodules: 'recursive' # Убрали пока, чтобы проверить шаги ниже
+      #  persist-credentials: false # Можно раскомментировать для теста
+
+    - name: Debug and Initialize Submodules
       run: |
-        echo "--- Verifying .gitmodules ---"
-        cat .gitmodules || echo ".gitmodules not found"
+        echo "--- Current directory structure (before submodule operations) ---"
+        ls -la
         echo ""
-        echo "--- Git submodule status ---"
-        git submodule status || echo "Failed to get submodule status"
+        echo "--- Verifying .gitmodules content ---"
+        cat .gitmodules || echo ".gitmodules not found or unreadable"
         echo ""
-        echo "--- Listing opensdk directory ---"
-        ls -la opensdk || echo "opensdk directory not found after checkout"
+        echo "--- Forcing submodule synchronization (git submodule sync --recursive) ---"
+        git submodule sync --recursive
         echo ""
-        echo "--- Attempting to display opensdk/build.gradle ---"
-        cat opensdk/build.gradle || echo "opensdk/build.gradle not found"
+        echo "--- Forcing submodule initialization (git submodule update --init --recursive --force) ---"
+        git submodule update --init --recursive --force
+        echo ""
+        echo "--- Final git submodule status ---"
+        git submodule status || echo "Failed to get submodule status after all attempts"
+        echo ""
+        echo "--- Listing opensdk directory (after all attempts) ---"
+        ls -la opensdk || echo "opensdk directory STILL not found"
+        echo ""
+        echo "--- Attempting to display opensdk/build.gradle (after all attempts) ---"
+        cat opensdk/build.gradle || echo "opensdk/build.gradle STILL not found"
 
     - name: Set up JDK 17
       uses: actions/setup-java@v3
