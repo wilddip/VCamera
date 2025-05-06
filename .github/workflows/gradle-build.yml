@@ -11,28 +11,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository and submodules
+    - name: Checkout main repository
       uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
-        fetch-depth: 0 # Fetch all history for all tags and branches
+      # fetch-depth: 0 # Пока не нужно, если клонируем вручную
 
-    - name: Verify Submodule Checkout and Configuration
+    - name: Manually Clone Submodule
       run: |
         echo "--- Verifying .gitmodules content ---"
         cat .gitmodules || echo ".gitmodules not found or unreadable"
+        SUBMODULE_PATH=$(git config -f .gitmodules --get submodule.opensdk.path)
+        SUBMODULE_URL=$(git config -f .gitmodules --get submodule.opensdk.url)
+        echo "Submodule Path: $SUBMODULE_PATH"
+        echo "Submodule URL: $SUBMODULE_URL"
+        if [ -n "$SUBMODULE_PATH" ] && [ -n "$SUBMODULE_URL" ]; then
+          echo "Creating directory $SUBMODULE_PATH if it doesn't exist"
+          mkdir -p $SUBMODULE_PATH
+          echo "Cloning $SUBMODULE_URL into $SUBMODULE_PATH"
+          git clone --depth 1 $SUBMODULE_URL $SUBMODULE_PATH
+          # Если нужно перейти на конкретный коммит, это нужно будет добавить сюда
+          # cd $SUBMODULE_PATH
+          # git checkout <commit_hash>
+          # cd ..
+        else
+          echo "Could not parse submodule path or URL from .gitmodules"
+          exit 1
+        fi
         echo ""
-        echo "--- Verifying .git/config content after checkout ---"
-        cat .git/config || echo ".git/config not found or unreadable"
+        echo "--- Listing $SUBMODULE_PATH directory ---"
+        ls -la $SUBMODULE_PATH || echo "$SUBMODULE_PATH directory not found or empty"
         echo ""
-        echo "--- Final git submodule status (--recursive) ---"
-        git submodule status --recursive || echo "Failed to get submodule status"
-        echo ""
-        echo "--- Listing opensdk directory ---"
-        ls -la opensdk || echo "opensdk directory not found"
-        echo ""
-        echo "--- Attempting to display opensdk/build.gradle ---"
-        cat opensdk/build.gradle || echo "opensdk/build.gradle not found"
+        echo "--- Attempting to display $SUBMODULE_PATH/build.gradle ---"
+        cat $SUBMODULE_PATH/build.gradle || echo "$SUBMODULE_PATH/build.gradle not found"
 
     - name: Set up JDK 17
       uses: actions/setup-java@v3
