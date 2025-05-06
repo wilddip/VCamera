@@ -69,6 +69,16 @@ tasks.withType(Javadoc) {
     options.addStringOption('charSet', 'UTF-8')
 }
 
+repositories {
+    mavenCentral()
+    google()
+    maven { url 'https://jitpack.io' }
+    maven { url "https://raw.githubusercontent.com/andvipgroup/CameraLib/master" }
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar", "*.aar"])
 
